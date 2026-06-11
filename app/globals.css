@@ -8,6 +8,7 @@
   --ink-soft: rgba(252, 246, 238, 0.82);
   --gold: oklch(0.82 0.075 78);
   --gold-line: oklch(0.86 0.06 80 / 0.55);
+  --slide-chrome-color: #2e5882;
   --shadow-text:
     0 1px 18px rgba(30, 18, 10, 0.55), 0 1px 3px rgba(30, 18, 10, 0.4);
 }
@@ -23,7 +24,7 @@ html {
 body {
   margin: 0;
   overflow-x: hidden;
-  background: #241710;
+  background: var(--slide-chrome-color);
   color: var(--ink);
   font-family: var(--serif);
   -webkit-font-smoothing: antialiased;
@@ -96,15 +97,19 @@ a {
   background:
     radial-gradient(
       120% 90% at 30% 20%,
-      oklch(0.62 0.07 60) 0%,
+      color-mix(in srgb, var(--slide-chrome-color) 82%, white) 0%,
       transparent 55%
     ),
     radial-gradient(
       120% 90% at 75% 85%,
-      oklch(0.5 0.06 35) 0%,
+      color-mix(in srgb, var(--slide-chrome-color) 76%, black) 0%,
       transparent 60%
     ),
-    linear-gradient(160deg, #5a4030, #2c1d14);
+    linear-gradient(
+      160deg,
+      var(--slide-chrome-color),
+      color-mix(in srgb, var(--slide-chrome-color) 70%, black)
+    );
 }
 
 @keyframes bob {

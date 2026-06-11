@@ -223,6 +223,8 @@ export default function WeddingInvitation() {
     () => sections.map((_, index) => `section-${index + 1}`),
     [],
   );
+  const activeChromeColor =
+    slideChromeColors[activeSlide] ?? slideChromeColors[0] ?? "#2e5882";
 
   useEffect(() => {
     const controller = new AbortController();
@@ -259,17 +261,19 @@ export default function WeddingInvitation() {
   useEffect(() => {
     if (!appReady) return;
 
-    const chromeColor =
-      slideChromeColors[activeSlide] ?? slideChromeColors[0] ?? "#241710";
     const themeColorMeta =
       document.querySelector<HTMLMetaElement>('meta[name="theme-color"]') ??
       document.head.appendChild(document.createElement("meta"));
 
     themeColorMeta.name = "theme-color";
-    themeColorMeta.content = chromeColor;
-    document.documentElement.style.backgroundColor = chromeColor;
-    document.body.style.backgroundColor = chromeColor;
-  }, [activeSlide, appReady]);
+    themeColorMeta.content = activeChromeColor;
+    document.documentElement.style.setProperty(
+      "--slide-chrome-color",
+      activeChromeColor,
+    );
+    document.documentElement.style.backgroundColor = activeChromeColor;
+    document.body.style.backgroundColor = activeChromeColor;
+  }, [activeChromeColor, appReady]);
 
   useEffect(() => {
     if (!appReady) return;
@@ -478,7 +482,11 @@ export default function WeddingInvitation() {
 
   return (
     <>
-      <div className="bg-fallback fixed inset-0 z-0" aria-hidden="true">
+      <div
+        className="bg-fallback fixed inset-0 z-0"
+        style={{ backgroundColor: activeChromeColor }}
+        aria-hidden="true"
+      >
         {slides.map((slide, index) => (
           <Image
             key={slide}
