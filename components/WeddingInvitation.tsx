@@ -592,15 +592,15 @@ export default function WeddingInvitation() {
               — Matthew 19:6 —
             </p>
             <div className="wedding-rule reveal" />
-            <p className="reveal text-shadow-wedding font-script text-[clamp(42px,11vw,58px)] leading-[1.05] text-(--ink)">
+            <p className="reveal text-shadow-wedding text-[clamp(18px,4.8vw,21px)] font-semibold leading-[1.75] text-[var(--ink)]">
+              Together with our families
+            </p>
+            <p className="reveal text-shadow-wedding mt-3 font-script text-[clamp(42px,11vw,58px)] leading-[1.05] text-(--ink)">
               Joe Sawaya 
               <br />
               &amp; 
               <br />
               Elissa Haddad
-            </p>
-            <p className="reveal text-shadow-wedding text-[clamp(18px,4.8vw,21px)] font-semibold leading-[1.75] text-[var(--ink)]">
-              Together with our families
             </p>
             <p className="reveal text-shadow-wedding text-[clamp(18px,4.8vw,21px)] leading-[1.75] text-[var(--ink)]">
               Joyfully invite you to celebrate our big day.
