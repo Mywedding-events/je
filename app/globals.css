@@ -1,0 +1,141 @@
+@import "tailwindcss";
+
+:root {
+  --script: "Great Vibes", cursive;
+  --serif: "Cormorant Garamond", Georgia, serif;
+  --cream: #fbf3e9;
+  --ink: #fcf6ee;
+  --ink-soft: rgba(252, 246, 238, 0.82);
+  --gold: oklch(0.82 0.075 78);
+  --gold-line: oklch(0.86 0.06 80 / 0.55);
+  --shadow-text:
+    0 1px 18px rgba(30, 18, 10, 0.55), 0 1px 3px rgba(30, 18, 10, 0.4);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  overflow-x: hidden;
+  background: #241710;
+  color: var(--ink);
+  font-family: var(--serif);
+  -webkit-font-smoothing: antialiased;
+}
+
+button,
+a {
+  -webkit-tap-highlight-color: transparent;
+}
+
+.text-shadow-wedding {
+  text-shadow: var(--shadow-text);
+}
+
+.font-script {
+  font-family: var(--script);
+}
+
+.font-serif-wedding {
+  font-family: var(--serif);
+}
+
+.wedding-rule {
+  position: relative;
+  margin: 22px auto;
+  height: 1px;
+  width: 64px;
+  background: var(--gold-line);
+}
+
+.wedding-rule::before,
+.wedding-rule::after {
+  position: absolute;
+  top: 50%;
+  height: 5px;
+  width: 5px;
+  transform: translateY(-50%) rotate(45deg);
+  border: 1px solid var(--gold-line);
+  content: "";
+}
+
+.wedding-rule::before {
+  left: -12px;
+}
+
+.wedding-rule::after {
+  right: -12px;
+}
+
+.wedding-diamond {
+  display: inline-block;
+  height: 7px;
+  width: 7px;
+  transform: rotate(45deg);
+  border: 1px solid var(--gold-line);
+}
+
+.reveal.pre {
+  opacity: 0;
+  transform: translateY(24px);
+}
+
+.reveal.go {
+  transition:
+    opacity 0.75s ease,
+    transform 0.75s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+.bg-fallback {
+  background:
+    radial-gradient(
+      120% 90% at 30% 20%,
+      oklch(0.62 0.07 60) 0%,
+      transparent 55%
+    ),
+    radial-gradient(
+      120% 90% at 75% 85%,
+      oklch(0.5 0.06 35) 0%,
+      transparent 60%
+    ),
+    linear-gradient(160deg, #5a4030, #2c1d14);
+}
+
+@keyframes bob {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(7px);
+  }
+}
+
+.animate-bob {
+  animation: bob 1.8s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  .reveal {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}
+
+@media print {
+  .reveal {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}

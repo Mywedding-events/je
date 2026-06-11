@@ -1,0 +1,702 @@
+"use client";
+
+import Image from "next/image";
+import type { ReactNode } from "react";
+import img0223 from "../uploads/IMG_0223.JPEG";
+import img0233 from "../uploads/IMG_0233.JPEG";
+import img0234 from "../uploads/IMG_0234.JPEG";
+import img0235 from "../uploads/IMG_0235.JPEG";
+import img0236 from "../uploads/IMG_0236.JPEG";
+import img0238 from "../uploads/IMG_0238.JPEG";
+import img0239 from "../uploads/IMG_0239.JPEG";
+import { useEffect, useMemo, useRef, useState } from "react";
+
+const slides = [img0234, img0233, img0236, img0235, img0239, img0238, img0223];
+
+const sections = [
+  "Welcome",
+  "Invitation",
+  "Ceremony",
+  "Registry",
+  "RSVP",
+  "Together",
+];
+const weddingDate = new Date("2026-08-16T17:30:00").getTime();
+
+type Countdown = {
+  days: string;
+  hours: string;
+  mins: string;
+  secs: string;
+};
+
+function getCountdown(): Countdown {
+  const remaining = Math.max(weddingDate - Date.now(), 0);
+  const totalSeconds = Math.floor(remaining / 1000);
+  const pad = (value: number) => value.toString().padStart(2, "0");
+
+  return {
+    days: pad(Math.floor(totalSeconds / 86400)),
+    hours: pad(Math.floor((totalSeconds % 86400) / 3600)),
+    mins: pad(Math.floor((totalSeconds % 3600) / 60)),
+    secs: pad(totalSeconds % 60),
+  };
+}
+
+function CalendarIcon({ className = "" }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      width="40"
+      height="40"
+      viewBox="0 0 40 40"
+      fill="none"
+      aria-hidden="true"
+    >
+      <rect
+        x="6"
+        y="9"
+        width="28"
+        height="25"
+        rx="3"
+        stroke="currentColor"
+        strokeWidth="1.4"
+      />
+      <path
+        d="M6 16h28M13 5v7M27 5v7"
+        stroke="currentColor"
+        strokeWidth="1.4"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
+function LocationIcon({ className = "" }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      width="40"
+      height="44"
+      viewBox="0 0 40 44"
+      fill="none"
+      aria-hidden="true"
+    >
+      <path
+        d="M20 3C12.8 3 7 8.8 7 16c0 9 13 24 13 24s13-15 13-24c0-7.2-5.8-13-13-13z"
+        stroke="currentColor"
+        strokeWidth="1.4"
+      />
+      <circle cx="20" cy="16" r="4.5" stroke="currentColor" strokeWidth="1.4" />
+    </svg>
+  );
+}
+
+function Reveal({
+  children,
+  className = "",
+}: {
+  children: ReactNode;
+  className?: string;
+}) {
+  return <div className={`reveal ${className}`}>{children}</div>;
+}
+
+function ButtonLink({
+  children,
+  href,
+  className = "",
+}: {
+  children: ReactNode;
+  href: string;
+  className?: string;
+}) {
+  return (
+    <a
+      className={`inline-flex cursor-pointer items-center justify-center whitespace-nowrap rounded-[2px] border border-[var(--gold-line)] bg-white/[0.04] px-[26px] py-[13px] font-serif-wedding text-base uppercase tracking-[0.12em] text-[var(--ink)] no-underline transition duration-300 ease-in-out hover:border-[var(--ink)] hover:bg-white/[0.14] active:scale-95 ${className}`}
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+    >
+      {children}
+    </a>
+  );
+}
+
+function RsvpButton({
+  label,
+  active,
+  onClick,
+}: {
+  label: string;
+  active: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      className={`inline-flex min-w-[82px] cursor-pointer items-center justify-center rounded-[2px] border px-[13px] py-[9px] font-serif-wedding text-xs uppercase tracking-[0.08em] transition duration-300 active:scale-95 ${
+        active
+          ? "border-transparent bg-[rgba(252,246,238,0.92)] font-semibold text-[#4a3220]"
+          : "border-[var(--gold-line)] bg-white/[0.04] text-[var(--ink)] hover:border-[var(--ink)] hover:bg-white/[0.14]"
+      }`}
+      type="button"
+      onClick={onClick}
+    >
+      {label}
+    </button>
+  );
+}
+
+export default function WeddingInvitation() {
+  const [activeSlide, setActiveSlide] = useState(0);
+  const [countdown, setCountdown] = useState<Countdown>({
+    days: "00",
+    hours: "00",
+    mins: "00",
+    secs: "00",
+  });
+  const [activeSection, setActiveSection] = useState(0);
+  const [cueHidden, setCueHidden] = useState(false);
+  const [rsvps, setRsvps] = useState<
+    Record<string, "accept" | "decline" | undefined>
+  >({});
+  const [confirmed, setConfirmed] = useState(false);
+  const lockRef = useRef(false);
+  const currentRef = useRef(0);
+  const touchStartRef = useRef<number | null>(null);
+  const sectionIds = useMemo(
+    () => sections.map((_, index) => `section-${index + 1}`),
+    [],
+  );
+
+  useEffect(() => {
+    const slideTimer = window.setInterval(() => {
+      setActiveSlide((index) => (index + 1) % slides.length);
+    }, 3000);
+    setCountdown(getCountdown());
+    const countdownTimer = window.setInterval(
+      () => setCountdown(getCountdown()),
+      1000,
+    );
+
+    return () => {
+      window.clearInterval(slideTimer);
+      window.clearInterval(countdownTimer);
+    };
+  }, []);
+
+  useEffect(() => {
+    const reducedMotion = window.matchMedia(
+      "(prefers-reduced-motion: reduce)",
+    ).matches;
+    const sectionElements = sectionIds
+      .map((id) => document.getElementById(id))
+      .filter((section): section is HTMLElement => Boolean(section));
+    const dotButtons = Array.from(
+      document.querySelectorAll<HTMLButtonElement>("[data-dot]"),
+    );
+
+    const revealSection = (section: HTMLElement) => {
+      if (section.dataset.revealed === "true") return;
+      section.dataset.revealed = "true";
+      if (reducedMotion) return;
+
+      section
+        .querySelectorAll<HTMLElement>(".reveal")
+        .forEach((element, index) => {
+          const delay = Math.min(index, 5) * 90;
+          element.classList.add("go");
+          element.style.transitionDelay = `${delay}ms`;
+          window.requestAnimationFrame(() => element.classList.remove("pre"));
+          window.setTimeout(() => {
+            element.style.transition = "none";
+            element.style.transitionDelay = "0ms";
+            element.classList.remove("pre");
+            element.style.opacity = "1";
+            element.style.transform = "none";
+          }, 900 + delay);
+        });
+    };
+
+    if (!reducedMotion) {
+      document
+        .querySelectorAll(".reveal")
+        .forEach((element) => element.classList.add("pre"));
+    }
+
+    const syncActiveSection = () => {
+      const viewportHeight =
+        window.innerHeight || document.documentElement.clientHeight;
+      let best = 0;
+      let bestDistance = Number.POSITIVE_INFINITY;
+
+      sectionElements.forEach((section, index) => {
+        const rect = section.getBoundingClientRect();
+        const distance = Math.abs(
+          rect.top + rect.height / 2 - viewportHeight / 2,
+        );
+        if (distance < bestDistance) {
+          best = index;
+          bestDistance = distance;
+        }
+      });
+
+      currentRef.current = best;
+      setActiveSection(best);
+    };
+
+    const revealVisibleSections = () => {
+      const viewportHeight =
+        window.innerHeight || document.documentElement.clientHeight;
+      sectionElements.forEach((section) => {
+        const rect = section.getBoundingClientRect();
+        if (
+          rect.top < viewportHeight * 0.85 &&
+          rect.bottom > viewportHeight * 0.15
+        )
+          revealSection(section);
+      });
+      syncActiveSection();
+    };
+
+    const goTo = (index: number) => {
+      const next = Math.max(0, Math.min(sectionElements.length - 1, index));
+      if (next === currentRef.current && lockRef.current) return;
+      currentRef.current = next;
+      lockRef.current = true;
+      revealSection(sectionElements[next]);
+      setActiveSection(next);
+      window.scrollTo({
+        top: sectionElements[next].offsetTop,
+        behavior: reducedMotion ? "auto" : "smooth",
+      });
+      window.setTimeout(() => {
+        lockRef.current = false;
+      }, 760);
+    };
+
+    const onWheel = (event: WheelEvent) => {
+      event.preventDefault();
+      if (lockRef.current) return;
+      if (event.deltaY > 8) goTo(currentRef.current + 1);
+      if (event.deltaY < -8) goTo(currentRef.current - 1);
+    };
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (["ArrowDown", "PageDown", " "].includes(event.key)) {
+        event.preventDefault();
+        goTo(currentRef.current + 1);
+      } else if (["ArrowUp", "PageUp"].includes(event.key)) {
+        event.preventDefault();
+        goTo(currentRef.current - 1);
+      } else if (event.key === "Home") {
+        event.preventDefault();
+        goTo(0);
+      } else if (event.key === "End") {
+        event.preventDefault();
+        goTo(sectionElements.length - 1);
+      }
+    };
+
+    const onTouchStart = (event: TouchEvent) => {
+      touchStartRef.current = event.touches[0]?.clientY ?? null;
+    };
+
+    const onTouchMove = (event: TouchEvent) => {
+      event.preventDefault();
+    };
+
+    const onTouchEnd = (event: TouchEvent) => {
+      if (touchStartRef.current === null || lockRef.current) return;
+      const distance =
+        touchStartRef.current -
+        (event.changedTouches[0]?.clientY ?? touchStartRef.current);
+      if (Math.abs(distance) > 40)
+        goTo(currentRef.current + (distance > 0 ? 1 : -1));
+      touchStartRef.current = null;
+    };
+
+    const onResize = () => {
+      syncActiveSection();
+      window.scrollTo({
+        top: sectionElements[currentRef.current]?.offsetTop ?? 0,
+      });
+      revealVisibleSections();
+    };
+
+    const onScroll = () => {
+      setCueHidden(window.scrollY > 40);
+      revealVisibleSections();
+    };
+
+    window.addEventListener("wheel", onWheel, { passive: false });
+    window.addEventListener("keydown", onKeyDown);
+    window.addEventListener("touchstart", onTouchStart, { passive: true });
+    window.addEventListener("touchmove", onTouchMove, { passive: false });
+    window.addEventListener("touchend", onTouchEnd, { passive: true });
+    window.addEventListener("resize", onResize);
+    window.addEventListener("scroll", onScroll, { passive: true });
+
+    const onDotClick = (event: Event) => {
+      const index = Number(
+        (event.currentTarget as HTMLButtonElement).dataset.index ?? "0",
+      );
+      goTo(index);
+    };
+
+    dotButtons.forEach((button) =>
+      button.addEventListener("click", onDotClick),
+    );
+
+    let observer: IntersectionObserver | undefined;
+    if ("IntersectionObserver" in window) {
+      observer = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting)
+              revealSection(entry.target as HTMLElement);
+          });
+          syncActiveSection();
+        },
+        { threshold: [0, 0.2, 0.6] },
+      );
+      sectionElements.forEach((section) => observer?.observe(section));
+    }
+
+    revealVisibleSections();
+    const firstFallback = window.setTimeout(revealVisibleSections, 200);
+    const secondFallback = window.setTimeout(revealVisibleSections, 800);
+
+    return () => {
+      window.removeEventListener("wheel", onWheel);
+      window.removeEventListener("keydown", onKeyDown);
+      window.removeEventListener("touchstart", onTouchStart);
+      window.removeEventListener("touchmove", onTouchMove);
+      window.removeEventListener("touchend", onTouchEnd);
+      window.removeEventListener("resize", onResize);
+      window.removeEventListener("scroll", onScroll);
+      dotButtons.forEach((button) =>
+        button.removeEventListener("click", onDotClick),
+      );
+      observer?.disconnect();
+      window.clearTimeout(firstFallback);
+      window.clearTimeout(secondFallback);
+    };
+  }, [sectionIds]);
+
+  const selectRsvp = (guest: string, value: "accept" | "decline") => {
+    setRsvps((current) => ({ ...current, [guest]: value }));
+  };
+
+  return (
+    <>
+      <div className="bg-fallback fixed inset-0 z-0" aria-hidden="true">
+        {slides.map((slide, index) => (
+          <Image
+            key={slide.src}
+            src={slide}
+            alt=""
+            fill
+            priority={index === 0}
+            sizes="100vw"
+            className={`object-cover object-[center_30%] transition-opacity duration-[1600ms] ease-in-out ${
+              activeSlide === index ? "opacity-100" : "opacity-0"
+            }`}
+          />
+        ))}
+      </div>
+      <div
+        className="pointer-events-none fixed inset-0 z-[1] bg-[linear-gradient(180deg,rgba(44,28,18,0.52)_0%,rgba(48,30,20,0.40)_40%,rgba(40,24,16,0.58)_100%)] before:absolute before:inset-0 before:bg-[radial-gradient(130%_100%_at_50%_0%,rgba(58,38,24,0.20),transparent_45%)] after:absolute after:inset-0 after:bg-[radial-gradient(120%_120%_at_50%_120%,rgba(40,24,14,0.65),transparent_55%)]"
+        aria-hidden="true"
+      />
+      <div
+        className="pointer-events-none fixed inset-0 z-[1] shadow-[inset_0_0_220px_40px_rgba(30,18,10,0.55)]"
+        aria-hidden="true"
+      />
+
+      <main className="relative z-[2]">
+        <section
+          id={sectionIds[0]}
+          className="relative flex min-h-svh flex-col items-center justify-center px-7 pb-[120px] pt-24 text-center"
+          data-screen-label="01 Welcome"
+        >
+          <div className="w-full max-w-[430px]">
+            <Reveal className="text-shadow-wedding text-[13px] font-medium uppercase tracking-[0.42em] text-[var(--ink-soft)]">
+              Together with their families
+            </Reveal>
+            <h1 className="reveal text-shadow-wedding font-script my-[0.12em] pb-[0.08em] text-[clamp(58px,16vw,88px)] leading-[1.08] text-[var(--ink)]">
+              Joe &amp; Elissa
+            </h1>
+            <div className="wedding-rule reveal" />
+            <p className="reveal text-shadow-wedding text-[15px] uppercase tracking-[0.18em] text-[var(--ink-soft)]">
+              Sunday · August 16 · 2026
+            </p>
+            <div className="reveal mt-[34px] flex justify-center gap-3.5">
+              {[
+                ["Days", countdown.days],
+                ["Hours", countdown.hours],
+                ["Mins", countdown.mins],
+                ["Secs", countdown.secs],
+              ].map(([label, value]) => (
+                <div
+                  key={label}
+                  className="flex min-w-[62px] flex-col items-center"
+                >
+                  <span className="text-shadow-wedding [font-variant-numeric:tabular-nums] text-[clamp(40px,11vw,52px)] font-medium leading-none text-[var(--ink)]">
+                    {value}
+                  </span>
+                  <span className="mt-[9px] text-[11px] uppercase tracking-[0.26em] text-[var(--ink-soft)]">
+                    {label}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+          <button
+            className={`text-shadow-wedding absolute bottom-[46px] left-1/2 flex -translate-x-1/2 cursor-pointer flex-col items-center gap-2 text-[var(--ink-soft)] transition-opacity duration-500 ${cueHidden ? "opacity-0" : "opacity-100"}`}
+            type="button"
+            onClick={() =>
+              document
+                .getElementById(sectionIds[1])
+                ?.scrollIntoView({ behavior: "smooth" })
+            }
+          >
+            <span className="text-[13px] uppercase tracking-[0.3em]">
+              Scroll
+            </span>
+            <svg
+              className="animate-bob"
+              width="22"
+              height="13"
+              viewBox="0 0 22 13"
+              fill="none"
+              aria-hidden="true"
+            >
+              <path
+                d="M1 1l10 10L21 1"
+                stroke="currentColor"
+                strokeWidth="1.4"
+                strokeLinecap="round"
+              />
+            </svg>
+          </button>
+        </section>
+
+        <section
+          id={sectionIds[1]}
+          className="flex min-h-svh flex-col items-center justify-center px-7 pb-[120px] pt-24 text-center"
+          data-screen-label="02 Invitation"
+        >
+          <div className="w-full max-w-[430px]">
+            <p className="reveal text-shadow-wedding text-[clamp(19px,5.2vw,22px)] italic leading-[1.7] text-[var(--ink)]">
+              &quot;So they are no longer two, but one flesh. Therefore what God
+              has joined together, let no one separate.&quot;
+            </p>
+            <p className="reveal text-shadow-wedding mt-2.5 text-[15px] tracking-[0.16em] text-[var(--ink-soft)]">
+              — Matthew 19:6 —
+            </p>
+            <div className="wedding-rule reveal" />
+            <p className="reveal text-shadow-wedding text-[clamp(18px,4.8vw,21px)] leading-[1.75] text-[var(--ink)]">
+              Joe &amp; Elissa
+            </p>
+            <p className="reveal text-shadow-wedding text-[clamp(18px,4.8vw,21px)] font-semibold leading-[1.75] text-[var(--ink)]">
+              Together with our families
+            </p>
+            <p className="reveal text-shadow-wedding text-[clamp(18px,4.8vw,21px)] leading-[1.75] text-[var(--ink)]">
+              Joyfully invite you to celebrate our big day.
+            </p>
+            <h2 className="reveal text-shadow-wedding font-script my-[0.18em] mb-[0.55em] text-[clamp(48px,13vw,72px)] leading-[1.08] text-[var(--ink)]">
+              Joe &amp; Elissa
+            </h2>
+            <p className="reveal text-shadow-wedding text-[clamp(18px,4.8vw,21px)] leading-[1.75] text-[var(--ink)]">
+              Sunday, 16 August 2026
+            </p>
+          </div>
+        </section>
+
+        <section
+          id={sectionIds[2]}
+          className="flex min-h-svh flex-col items-center justify-center px-7 pb-[120px] pt-24 text-center"
+          data-screen-label="03 Ceremony"
+        >
+          <div className="w-full max-w-[430px]">
+            <h2 className="reveal text-shadow-wedding font-script text-[clamp(46px,13vw,64px)] leading-[1.04] text-[var(--ink)]">
+              Wedding Ceremony
+            </h2>
+            <div className="wedding-rule reveal" />
+            <CalendarIcon className="reveal mx-auto block text-[var(--ink)] drop-shadow-[0_2px_8px_rgba(30,18,10,0.45)]" />
+            <p className="reveal text-shadow-wedding mt-1.5 text-[clamp(18px,4.8vw,21px)] leading-[1.75] tracking-[0.04em] text-[var(--ink)]">
+              5:30 PM
+            </p>
+            <LocationIcon className="reveal mx-auto mt-[30px] block text-[var(--ink)] drop-shadow-[0_2px_8px_rgba(30,18,10,0.45)]" />
+            <p className="reveal text-shadow-wedding mt-1 text-[clamp(18px,4.8vw,21px)] font-semibold leading-[1.75] text-[var(--ink)]">
+              Saydet Al Intikal Church
+            </p>
+            <p className="reveal text-shadow-wedding text-[clamp(18px,4.8vw,21px)] leading-[1.75] text-[var(--ink)]">
+              Achrafieh
+            </p>
+            <ButtonLink
+              className="reveal mt-[22px]"
+              href="https://www.google.com/maps/search/?api=1&query=Saydet+Al+Intikal+Church+Achrafieh"
+            >
+              Church Location
+            </ButtonLink>
+            <div className="wedding-rule reveal" />
+            <p className="reveal text-shadow-wedding text-[clamp(18px,4.8vw,21px)] italic leading-[1.75] text-[var(--ink-soft)]">
+              Followed by Reception &amp; Dinner
+            </p>
+            <p className="reveal text-shadow-wedding mt-3.5 text-[clamp(18px,4.8vw,21px)] font-semibold leading-[1.75] text-[var(--ink)]">
+              Jardin De Stone
+            </p>
+            <ButtonLink
+              className="reveal mt-[18px]"
+              href="https://www.google.com/maps/search/?api=1&query=Jardin+De+Stone+Lebanon"
+            >
+              Venue Location
+            </ButtonLink>
+          </div>
+        </section>
+
+        <section
+          id={sectionIds[3]}
+          className="flex min-h-svh flex-col items-center justify-center px-7 pb-[120px] pt-24 text-center"
+          data-screen-label="04 Registry"
+        >
+          <div className="w-full max-w-[430px]">
+            <h2 className="reveal text-shadow-wedding font-script text-[clamp(46px,13vw,64px)] leading-[1.04] text-[var(--ink)]">
+              Gift Registry
+            </h2>
+            <div className="wedding-rule reveal" />
+            <p className="reveal text-shadow-wedding text-[clamp(18px,4.8vw,21px)] italic leading-[1.75] text-[var(--ink-soft)]">
+              Your presence is enough of a present to us! For those who desire,
+              a registry is available at:
+            </p>
+            <div className="reveal mt-[30px] text-shadow-wedding">
+              <div className="mb-2 text-[22px] font-semibold tracking-[0.06em] text-[var(--ink)]">
+                UAE Emirates NBD
+              </div>
+              <p className="text-[17px] leading-8 tracking-[0.04em] text-[var(--ink-soft)]">
+                Joe Antoine Sawaya
+              </p>
+              <p className="text-[17px] leading-8 tracking-[0.04em] text-[var(--ink-soft)]">
+                Ac #0125846129002
+              </p>
+              <p className="text-[17px] leading-8 tracking-[0.04em] text-[var(--ink-soft)]">
+                IBAN AE10 0260 0001 2584 6129 002
+              </p>
+            </div>
+            <div className="wedding-diamond reveal my-6" />
+            <div className="reveal text-shadow-wedding">
+              <div className="mb-2 text-[22px] font-semibold tracking-[0.06em] text-[var(--ink)]">
+                Whish Money
+              </div>
+              <p className="whitespace-pre-line text-[17px] leading-8 tracking-[0.04em] text-[var(--ink-soft)]">
+                Account ID: 10218001-03{`\n`}Phone number: +971 558951417
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <section
+          id={sectionIds[4]}
+          className="flex min-h-svh flex-col items-center justify-center px-7 pb-[120px] pt-24 text-center"
+          data-screen-label="05 RSVP"
+        >
+          <div className="w-full max-w-[430px]">
+            <h2 className="reveal text-shadow-wedding font-script text-[clamp(46px,13vw,64px)] leading-[1.04] text-[var(--ink)]">
+              Kindly RSVP
+            </h2>
+            <p className="reveal text-shadow-wedding mt-1.5 text-[15px] tracking-[0.14em] text-[var(--ink-soft)]">
+              Please confirm by July 15, 2026
+            </p>
+            <div className="wedding-rule reveal" />
+            <p className="reveal text-shadow-wedding my-1.5 mb-[18px] text-[17px] tracking-[0.04em] text-[var(--ink-soft)]">
+              Number of invitees:{" "}
+              <b className="font-semibold text-[var(--ink)]">2</b>
+            </p>
+            <div className="reveal space-y-3">
+              {["Joe Sawaya", "Elissa Haddad"].map((guest) => (
+                <div
+                  key={guest}
+                  className="flex items-center justify-between gap-3 border-y border-[rgba(252,246,238,0.16)] py-3 text-left"
+                >
+                  <span className="text-shadow-wedding text-[19px] text-[var(--ink)]">
+                    {guest}
+                  </span>
+                  <div className="flex gap-2">
+                    <RsvpButton
+                      label="Accept"
+                      active={rsvps[guest] === "accept"}
+                      onClick={() => selectRsvp(guest, "accept")}
+                    />
+                    <RsvpButton
+                      label="Decline"
+                      active={rsvps[guest] === "decline"}
+                      onClick={() => selectRsvp(guest, "decline")}
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+            <button
+              className="reveal mt-[30px] inline-flex cursor-pointer items-center justify-center whitespace-nowrap rounded-[2px] border border-[var(--gold-line)] bg-white/[0.04] px-[26px] py-[13px] font-serif-wedding text-base uppercase tracking-[0.12em] text-[var(--ink)] transition duration-300 hover:border-[var(--ink)] hover:bg-white/[0.14] active:scale-95"
+              type="button"
+              onClick={() => setConfirmed(true)}
+            >
+              Press to Confirm
+            </button>
+            <p
+              className={`text-shadow-wedding mt-5 min-h-6 text-lg italic text-[var(--gold)] transition-opacity duration-500 ${confirmed ? "opacity-100" : "opacity-0"}`}
+            >
+              Thank you — your response has been noted ♡
+            </p>
+          </div>
+        </section>
+
+        <section
+          id={sectionIds[5]}
+          className="flex min-h-svh flex-col items-center justify-center px-7 pb-[120px] pt-24 text-center"
+          data-screen-label="06 Together"
+        >
+          <div className="flex w-full max-w-[430px] flex-col items-center">
+            <div className="reveal w-[min(78vw,320px)] rotate-[-4deg] rounded bg-[#fdfcfa] px-4 pt-4 shadow-[0_30px_60px_rgba(20,12,6,0.55),0_6px_18px_rgba(20,12,6,0.4)]">
+              <Image
+                src={img0233}
+                alt="Joe and Elissa"
+                width={640}
+                height={680}
+                className="block h-[340px] w-full rounded-[2px] object-cover object-[center_25%]"
+              />
+              <div className="px-1.5 py-[18px] pb-[22px] text-center font-serif-wedding text-[21px] italic text-[#43342a]">
+                ♡ Together forever ♡
+              </div>
+            </div>
+            <h2 className="reveal text-shadow-wedding font-script mt-9 text-[clamp(46px,13vw,62px)] leading-[1.04] text-[var(--ink)]">
+              See you there
+            </h2>
+          </div>
+        </section>
+      </main>
+
+      <nav
+        className="fixed right-[18px] top-1/2 z-30 flex -translate-y-1/2 flex-col gap-[13px]"
+        aria-label="Invitation sections"
+      >
+        {sections.map((section, index) => (
+          <button
+            key={section}
+            data-dot
+            data-index={index}
+            className={`h-[9px] w-[9px] cursor-pointer rounded-full border p-0 transition duration-300 ${
+              activeSection === index
+                ? "scale-125 border-[var(--gold)] bg-[var(--gold)]"
+                : "border-[rgba(252,246,238,0.7)] bg-transparent"
+            }`}
+            type="button"
+            aria-label={`Go to section ${index + 1}: ${section}`}
+          />
+        ))}
+      </nav>
+    </>
+  );
+}
