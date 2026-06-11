@@ -2,16 +2,17 @@
 
 import Image from "next/image";
 import type { ReactNode } from "react";
-import img0223 from "../uploads/IMG_0223.JPEG";
-import img0233 from "../uploads/IMG_0233.JPEG";
-import img0234 from "../uploads/IMG_0234.JPEG";
-import img0235 from "../uploads/IMG_0235.JPEG";
-import img0236 from "../uploads/IMG_0236.JPEG";
-import img0238 from "../uploads/IMG_0238.JPEG";
-import img0239 from "../uploads/IMG_0239.JPEG";
 import { useEffect, useMemo, useRef, useState } from "react";
 
-const slides = [img0234, img0233, img0236, img0235, img0239, img0238, img0223];
+const slides = [
+  "/uploads/IMG_0234.JPEG",
+  "/uploads/IMG_0233.JPEG",
+  "/uploads/IMG_0236.JPEG",
+  "/uploads/IMG_0235.JPEG",
+  "/uploads/IMG_0239.JPEG",
+  "/uploads/IMG_0238.JPEG",
+  "/uploads/IMG_0223.JPEG",
+];
 
 const sections = [
   "Welcome",
@@ -393,7 +394,7 @@ export default function WeddingInvitation() {
       <div className="bg-fallback fixed inset-0 z-0" aria-hidden="true">
         {slides.map((slide, index) => (
           <Image
-            key={slide.src}
+            key={slide}
             src={slide}
             alt=""
             fill
@@ -661,7 +662,7 @@ export default function WeddingInvitation() {
           <div className="flex w-full max-w-[430px] flex-col items-center">
             <div className="reveal w-[min(78vw,320px)] rotate-[-4deg] rounded bg-[#fdfcfa] px-4 pt-4 shadow-[0_30px_60px_rgba(20,12,6,0.55),0_6px_18px_rgba(20,12,6,0.4)]">
               <Image
-                src={img0233}
+                src="/uploads/IMG_0233.JPEG"
                 alt="Joe and Elissa"
                 width={640}
                 height={680}
