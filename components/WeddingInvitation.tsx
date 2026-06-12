@@ -243,8 +243,6 @@ export default function WeddingInvitation({
   const lockRef = useRef(false);
   const currentRef = useRef(0);
   const touchStartRef = useRef<number | null>(null);
-  const touchScrollStartRef = useRef(0);
-  const touchHandledByScrollRef = useRef(false);
   const sectionIds = useMemo(
     () => sections.map((_, index) => `section-${index + 1}`),
     [],
@@ -314,8 +312,6 @@ export default function WeddingInvitation({
     const dotButtons = Array.from(
       document.querySelectorAll<HTMLButtonElement>("[data-dot]"),
     );
-    const getViewportHeight = () =>
-      window.innerHeight || document.documentElement.clientHeight;
 
     const revealSection = (section: HTMLElement) => {
       if (section.dataset.revealed === "true") return;
@@ -346,7 +342,8 @@ export default function WeddingInvitation({
     }
 
     const syncActiveSection = () => {
-      const viewportHeight = getViewportHeight();
+      const viewportHeight =
+        window.innerHeight || document.documentElement.clientHeight;
       let best = 0;
       let bestDistance = Number.POSITIVE_INFINITY;
 
@@ -366,7 +363,8 @@ export default function WeddingInvitation({
     };
 
     const revealVisibleSections = () => {
-      const viewportHeight = getViewportHeight();
+      const viewportHeight =
+        window.innerHeight || document.documentElement.clientHeight;
       sectionElements.forEach((section) => {
         const rect = section.getBoundingClientRect();
         if (
@@ -394,32 +392,11 @@ export default function WeddingInvitation({
       }, 760);
     };
 
-    const canScrollWithinCurrentSection = (direction: 1 | -1) => {
-      const section = sectionElements[currentRef.current];
-      if (!section) return false;
-
-      const viewportHeight = getViewportHeight();
-      if (section.offsetHeight <= viewportHeight + 1) return false;
-
-      const currentScroll = window.scrollY || document.documentElement.scrollTop;
-      const topEdge = section.offsetTop;
-      const bottomEdge =
-        section.offsetTop + section.offsetHeight - viewportHeight;
-
-      return direction > 0
-        ? currentScroll < bottomEdge - 2
-        : currentScroll > topEdge + 2;
-    };
-
     const onWheel = (event: WheelEvent) => {
-      if (Math.abs(event.deltaY) <= 8) return;
-
-      const direction = event.deltaY > 0 ? 1 : -1;
-      if (canScrollWithinCurrentSection(direction)) return;
-
       event.preventDefault();
       if (lockRef.current) return;
-      goTo(currentRef.current + direction);
+      if (event.deltaY > 8) goTo(currentRef.current + 1);
+      if (event.deltaY < -8) goTo(currentRef.current - 1);
     };
 
     const onKeyDown = (event: KeyboardEvent) => {
@@ -440,57 +417,20 @@ export default function WeddingInvitation({
 
     const onTouchStart = (event: TouchEvent) => {
       touchStartRef.current = event.touches[0]?.clientY ?? null;
-      touchScrollStartRef.current =
-        window.scrollY || document.documentElement.scrollTop;
-      touchHandledByScrollRef.current = false;
     };
 
     const onTouchMove = (event: TouchEvent) => {
-      if (touchStartRef.current === null) return;
-
-      const distance =
-        touchStartRef.current -
-        (event.touches[0]?.clientY ?? touchStartRef.current);
-      if (Math.abs(distance) <= 6) return;
-
-      const direction = distance > 0 ? 1 : -1;
-      if (canScrollWithinCurrentSection(direction)) {
-        touchHandledByScrollRef.current = true;
-        return;
-      }
-
       event.preventDefault();
     };
 
     const onTouchEnd = (event: TouchEvent) => {
-      if (touchStartRef.current === null) return;
-      if (lockRef.current) {
-        touchStartRef.current = null;
-        touchHandledByScrollRef.current = false;
-        return;
-      }
-
+      if (touchStartRef.current === null || lockRef.current) return;
       const distance =
         touchStartRef.current -
         (event.changedTouches[0]?.clientY ?? touchStartRef.current);
-      const scrollDistance = Math.abs(
-        (window.scrollY || document.documentElement.scrollTop) -
-          touchScrollStartRef.current,
-      );
-
-      if (
-        touchHandledByScrollRef.current ||
-        scrollDistance > 4 ||
-        Math.abs(distance) <= 40
-      ) {
-        touchStartRef.current = null;
-        touchHandledByScrollRef.current = false;
-        return;
-      }
-
-      goTo(currentRef.current + (distance > 0 ? 1 : -1));
+      if (Math.abs(distance) > 40)
+        goTo(currentRef.current + (distance > 0 ? 1 : -1));
       touchStartRef.current = null;
-      touchHandledByScrollRef.current = false;
     };
 
     const onResize = () => {
